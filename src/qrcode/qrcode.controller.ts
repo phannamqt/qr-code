@@ -67,6 +67,12 @@ export class QrCodeController {
     return res.redirect(HttpStatus.FOUND, url);
   }
 
+  @Get(':id/image')
+  async getImage(@Param('id') id: string, @Res() res: Response) {
+    const { format, data } = await this.qrService.getImage(id);
+    return this.sendResponse({ id, format, data }, res);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.qrService.findOne(id);

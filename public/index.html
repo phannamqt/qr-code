@@ -107,6 +107,17 @@
       </template>
     </div>
 
+    <!-- History Button -->
+    <button @click="historyOpen=true" title="Lịch sử"
+      class="relative w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
+      <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span x-show="history.length>0"
+        class="absolute -top-1 -right-1 w-4 h-4 bg-indigo-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+        x-text="history.length>99?'99+':history.length"></span>
+    </button>
+
     <!-- Dark Mode Toggle -->
     <button @click="toggleDark()"
       class="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
@@ -644,6 +655,70 @@
 
 </main>
 
+<!-- ──────────────── HISTORY PANEL ──────────────── -->
+<div x-show="historyOpen" x-cloak class="fixed inset-0 z-50 flex">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="historyOpen=false"></div>
+
+  <!-- Panel -->
+  <div class="relative ml-auto w-full max-w-sm h-full bg-white dark:bg-gray-900 shadow-2xl flex flex-col"
+    x-transition:enter="transition ease-out duration-250"
+    x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+      <div class="flex items-center gap-2">
+        <p class="font-bold text-gray-900 dark:text-white">Lịch sử</p>
+        <span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full" x-text="history.length + ' mục'"></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button x-show="history.length>0" @click="clearHistory()"
+          class="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+          Xóa tất cả
+        </button>
+        <button @click="historyOpen=false" class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div x-show="history.length===0" class="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400 dark:text-gray-600">
+      <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p class="text-sm">Chưa có lịch sử</p>
+    </div>
+
+    <!-- List -->
+    <div class="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+      <template x-for="(item, i) in history" :key="item.id">
+        <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+          @click="loadHistoryItem(item)">
+          <!-- Thumbnail -->
+          <div class="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <img :src="item.imageDataUrl" class="w-full h-full object-contain" />
+          </div>
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 mb-0.5">
+              <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide" x-text="item.tab==='barcode' ? 'Barcode' : item.qrType"></span>
+              <span x-show="item.tracking" class="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 rounded-full font-medium">tracking</span>
+            </div>
+            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate" x-text="item.label"></p>
+            <p class="text-xs text-gray-400 dark:text-gray-500" x-text="item.createdAt"></p>
+          </div>
+          <!-- Delete -->
+          <button @click.stop="deleteHistoryItem(i)"
+            class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+
 <!-- ──────────────── TOAST ──────────────── -->
 <div x-show="toast" x-transition:enter="transition ease-out duration-200"
   x-transition:enter-start="opacity-0 translate-y-3" x-transition:enter-end="opacity-100 translate-y-0"
@@ -665,6 +740,8 @@ function app() {
     codeId: null,
     scanCount: null,
     scanCountLoading: false,
+    historyOpen: false,
+    history: JSON.parse(localStorage.getItem('qrHistory') || '[]'),
     decodeFile: null,
     decodePreview: null,
     decodeResult: null,
@@ -748,6 +825,44 @@ function app() {
       };
     },
 
+    // ── History ─────────────────────────────────────────────────────────────
+    async saveToHistory(id, tab, qrType, label, blob, tracking, formData) {
+      const toDataUrl = b => new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result); fr.readAsDataURL(b); });
+      const imageDataUrl = blob instanceof Blob ? await toDataUrl(blob) : blob;
+      const now = new Date();
+      const createdAt = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      const item = { id, tab, qrType, label, imageDataUrl, tracking, createdAt, formData };
+      this.history = [item, ...this.history].slice(0, 50);
+      localStorage.setItem('qrHistory', JSON.stringify(this.history));
+    },
+
+    loadHistoryItem(item) {
+      this.preview = item.imageDataUrl;
+      this.previewBlob = null;
+      this.codeId = item.id;
+      this.tab = item.tab;
+      if (item.tab === 'qr') {
+        this.qrType = item.qrType;
+        if (item.formData) Object.assign(this.qr, item.formData);
+      } else {
+        if (item.formData) Object.assign(this.bc, item.formData);
+      }
+      this.qr.tracking = item.tracking;
+      if (item.tracking) { this.scanCount = 0; this.refreshScanCount(); }
+      else this.scanCount = null;
+      this.historyOpen = false;
+    },
+
+    deleteHistoryItem(index) {
+      this.history.splice(index, 1);
+      localStorage.setItem('qrHistory', JSON.stringify(this.history));
+    },
+
+    clearHistory() {
+      this.history = [];
+      localStorage.removeItem('qrHistory');
+    },
+
     async refreshScanCount() {
       if (!this.codeId || this.scanCountLoading) return;
       this.scanCountLoading = true;
@@ -793,13 +908,12 @@ function app() {
         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, ...d }) });
         if (!res.ok) { const e = await res.json(); throw new Error(Array.isArray(e.message) ? e.message.join(', ') : e.message); }
         this.codeId = res.headers.get('X-QrCode-Id');
-        if (this.qr.fmt === 'base64') { const j = await res.json(); this.preview = j.data; }
-        else { const blob = await res.blob(); this.previewBlob = blob; this.preview = URL.createObjectURL(blob); }
-        if (this.qr.tracking) {
-          this.scanCount = 0;
-          this.refreshScanCount();
-          localStorage.setItem('lastTrackingQr', JSON.stringify({ id: this.codeId }));
-        }
+        let imgForHistory;
+        if (this.qr.fmt === 'base64') { const j = await res.json(); this.preview = j.data; imgForHistory = j.data; }
+        else { const blob = await res.blob(); this.previewBlob = blob; this.preview = URL.createObjectURL(blob); imgForHistory = blob; }
+        if (this.qr.tracking) { this.scanCount = 0; this.refreshScanCount(); localStorage.setItem('lastTrackingQr', JSON.stringify({ id: this.codeId })); }
+        const labelMap = { website: this.qr.url, text: this.qr.text, vcard: this.qr.firstName + (this.qr.lastName ? ' ' + this.qr.lastName : ''), wifi: this.qr.ssid, pdf: 'PDF', appstore: 'App Store' };
+        await this.saveToHistory(this.codeId, 'qr', this.qrType, labelMap[this.qrType] || this.qrType, imgForHistory, this.qr.tracking, { ...this.qr });
         // scroll to preview on mobile
         if (window.innerWidth < 1024) this.$nextTick(() => document.querySelector('#preview-anchor')?.scrollIntoView({ behavior: 'smooth' }));
       } catch (e) { this.err = e.message; }
@@ -817,6 +931,7 @@ function app() {
         if (!res.ok) { const e = await res.json(); throw new Error(Array.isArray(e.message) ? e.message.join(', ') : e.message); }
         this.codeId = res.headers.get('X-Barcode-Id');
         const blob = await res.blob(); this.previewBlob = blob; this.preview = URL.createObjectURL(blob);
+        await this.saveToHistory(this.codeId, 'barcode', this.bc.type, this.bc.content, blob, false, { ...this.bc });
         if (window.innerWidth < 1024) this.$nextTick(() => document.querySelector('#preview-anchor')?.scrollIntoView({ behavior: 'smooth' }));
       } catch (e) { this.err = e.message; }
       finally { this.loading = false; }

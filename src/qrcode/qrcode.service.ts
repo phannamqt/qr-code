@@ -113,6 +113,38 @@ export class QrCodeService {
     return this.qrRepo.findOneByOrFail({ id });
   }
 
+  async getImage(id: string): Promise<{ format: QrCodeFormat; data: Buffer | string }> {
+    const e = await this.qrRepo.findOneBy({ id });
+    if (!e) throw new NotFoundException('Không tìm thấy mã QR');
+
+    const qrContent = e.scanTracking && REDIRECTABLE_TYPES.includes(e.type as QrCodeType)
+      ? `${(process.env.APP_URL ?? '').replace(/\/$/, '')}/qrcode/${e.id}/redirect`
+      : e.content;
+
+    const opts: QRCode.QRCodeToBufferOptions = {
+      errorCorrectionLevel: e.logoUrl ? ErrorCorrectionLevel.H : e.errorCorrection as any,
+      width: e.size,
+      color: { dark: e.fgColor, light: e.bgColor },
+    };
+
+    let data: Buffer | string;
+    try {
+      if (e.format === QrCodeFormat.SVG) {
+        data = await QRCode.toString(qrContent, { ...opts, type: 'svg' } as QRCode.QRCodeToStringOptions);
+      } else {
+        let buf = await QRCode.toBuffer(qrContent, opts);
+        if (e.logoUrl) buf = await this.composeLogo(buf, e.logoUrl, e.size);
+        data = e.format === QrCodeFormat.BASE64
+          ? `data:image/png;base64,${buf.toString('base64')}`
+          : buf;
+      }
+    } catch (err) {
+      throw new BadRequestException(`Không thể tạo ảnh: ${err.message}`);
+    }
+
+    return { format: e.format as QrCodeFormat, data };
+  }
+
   async deleteQr(id: string) {
     const entity = await this.qrRepo.findOneBy({ id });
     if (!entity) throw new NotFoundException('Không tìm thấy mã QR');
