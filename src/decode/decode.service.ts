@@ -25,7 +25,8 @@ export class DecodeService {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore – zxing-wasm uses package.json exports, not supported with moduleResolution:node
       const { readBarcodesFromImageData } = await import('zxing-wasm/reader');
-      const sharp = (await import('sharp')).default;
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const sharp = require('sharp');
 
       // Convert image to raw RGBA buffer using sharp
       const { data, info } = await sharp(file.buffer)
