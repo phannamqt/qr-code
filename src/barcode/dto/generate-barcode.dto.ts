@@ -2,37 +2,37 @@ import { IsEnum, IsOptional, IsString, IsInt, IsBoolean, Min, Max } from 'class-
 import { BarcodeType, BarcodeFormat } from '../entities/barcode.entity';
 
 export class GenerateBarcodeDto {
-  @IsEnum(BarcodeType)
+  @IsEnum(BarcodeType, { message: 'Loại barcode không hợp lệ' })
   type: BarcodeType;
 
-  @IsString()
+  @IsString({ message: 'Nội dung barcode không được để trống' })
   content: string;
 
   @IsOptional()
-  @IsEnum(BarcodeFormat)
+  @IsEnum(BarcodeFormat, { message: 'Định dạng không hợp lệ (png, svg, base64)' })
   format?: BarcodeFormat = BarcodeFormat.PNG;
 
   @IsOptional()
-  @IsInt()
-  @Min(50)
-  @Max(2000)
+  @IsInt({ message: 'Chiều rộng phải là số nguyên' })
+  @Min(50, { message: 'Chiều rộng tối thiểu là 50px' })
+  @Max(2000, { message: 'Chiều rộng tối đa là 2000px' })
   width?: number = 200;
 
   @IsOptional()
-  @IsInt()
-  @Min(20)
-  @Max(500)
+  @IsInt({ message: 'Chiều cao phải là số nguyên' })
+  @Min(20, { message: 'Chiều cao tối thiểu là 20px' })
+  @Max(500, { message: 'Chiều cao tối đa là 500px' })
   height?: number = 80;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Màu chữ không hợp lệ' })
   fgColor?: string = '#000000';
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Màu nền không hợp lệ' })
   bgColor?: string = '#ffffff';
 
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'showText phải là true hoặc false' })
   showText?: boolean = true;
 }

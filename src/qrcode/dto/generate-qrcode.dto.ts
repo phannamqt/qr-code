@@ -8,8 +8,6 @@ import {
   Min,
   Max,
   IsEmail,
-  IsPhoneNumber,
-  ValidateIf,
 } from 'class-validator';
 import {
   QrCodeFormat,
@@ -25,132 +23,132 @@ export enum WifiEncryption {
 // ── Base design options shared across all types ─────────────────────────────
 class QrDesignDto {
   @IsOptional()
-  @IsEnum(QrCodeFormat)
+  @IsEnum(QrCodeFormat, { message: 'Định dạng không hợp lệ (png, svg, base64)' })
   format?: QrCodeFormat = QrCodeFormat.PNG;
 
   @IsOptional()
-  @IsEnum(ErrorCorrectionLevel)
+  @IsEnum(ErrorCorrectionLevel, { message: 'Mức sửa lỗi không hợp lệ (L, M, Q, H)' })
   errorCorrection?: ErrorCorrectionLevel = ErrorCorrectionLevel.M;
 
   @IsOptional()
-  @IsInt()
-  @Min(100)
-  @Max(2000)
+  @IsInt({ message: 'Kích thước phải là số nguyên' })
+  @Min(100, { message: 'Kích thước tối thiểu là 100px' })
+  @Max(2000, { message: 'Kích thước tối đa là 2000px' })
   size?: number = 300;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Màu chữ không hợp lệ' })
   fgColor?: string = '#000000';
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Màu nền không hợp lệ' })
   bgColor?: string = '#ffffff';
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Logo URL không hợp lệ' })
   logoUrl?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Kiểu khung không hợp lệ' })
   frameStyle?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Kiểu chấm không hợp lệ' })
   dotStyle?: string = 'square';
 
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'scanTracking phải là true hoặc false' })
   scanTracking?: boolean = false;
 }
 
 // ── Website ──────────────────────────────────────────────────────────────────
 export class GenerateWebsiteDto extends QrDesignDto {
-  @IsUrl()
+  @IsUrl({}, { message: 'URL không hợp lệ' })
   url: string;
 }
 
 // ── Text ─────────────────────────────────────────────────────────────────────
 export class GenerateTextDto extends QrDesignDto {
-  @IsString()
+  @IsString({ message: 'Nội dung văn bản không được để trống' })
   text: string;
 }
 
 // ── vCard (Digital Business Card) ────────────────────────────────────────────
 export class GenerateVCardDto extends QrDesignDto {
-  @IsString()
+  @IsString({ message: 'Tên không được để trống' })
   firstName: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Họ không hợp lệ' })
   lastName?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Tên công ty không hợp lệ' })
   organization?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Chức danh không hợp lệ' })
   title?: string;
 
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'Email không hợp lệ' })
   email?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Số điện thoại không hợp lệ' })
   phone?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Website không hợp lệ' })
   website?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Địa chỉ không hợp lệ' })
   address?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Thành phố không hợp lệ' })
   city?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Quốc gia không hợp lệ' })
   country?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Ghi chú không hợp lệ' })
   note?: string;
 }
 
 // ── WiFi ─────────────────────────────────────────────────────────────────────
 export class GenerateWifiDto extends QrDesignDto {
-  @IsString()
+  @IsString({ message: 'Tên mạng (SSID) không được để trống' })
   ssid: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Mật khẩu không hợp lệ' })
   password?: string;
 
-  @IsEnum(WifiEncryption)
+  @IsEnum(WifiEncryption, { message: 'Kiểu mã hóa không hợp lệ (WPA, WEP, nopass)' })
   encryption: WifiEncryption;
 
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'hidden phải là true hoặc false' })
   hidden?: boolean = false;
 }
 
 // ── PDF ──────────────────────────────────────────────────────────────────────
 export class GeneratePdfDto extends QrDesignDto {
-  @IsUrl({ require_tld: false })
+  @IsUrl({ require_tld: false }, { message: 'URL file PDF không hợp lệ' })
   pdfUrl: string;
 }
 
 // ── App Store ─────────────────────────────────────────────────────────────────
 export class GenerateAppStoreDto extends QrDesignDto {
   @IsOptional()
-  @IsUrl()
+  @IsUrl({}, { message: 'URL App Store không hợp lệ' })
   iosUrl?: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsUrl({}, { message: 'URL Google Play không hợp lệ' })
   androidUrl?: string;
 }

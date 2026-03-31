@@ -136,7 +136,9 @@ export class QrCodeService {
   ) {
     const format: QrCodeFormat = dto.format ?? QrCodeFormat.PNG;
     const size: number = dto.size ?? 300;
-    const errorCorrection: ErrorCorrectionLevel = dto.errorCorrection ?? ErrorCorrectionLevel.M;
+    // Khi có logo, bắt buộc dùng Error Correction H để QR vẫn đọc được dù bị che
+    const errorCorrection: ErrorCorrectionLevel =
+      dto.logoUrl ? ErrorCorrectionLevel.H : (dto.errorCorrection ?? ErrorCorrectionLevel.M);
     const scanTracking: boolean = dto.scanTracking ?? false;
 
     // Save entity first to get the ID (needed for redirect URL)
@@ -176,12 +178,52 @@ export class QrCodeService {
     if (format === QrCodeFormat.SVG) {
       output = await QRCode.toString(qrContent, { ...qrOptions, type: 'svg' } as QRCode.QRCodeToStringOptions);
     } else if (format === QrCodeFormat.BASE64) {
-      output = await QRCode.toDataURL(qrContent, qrOptions as unknown as QRCode.QRCodeToDataURLOptions);
+      let buf = await QRCode.toBuffer(qrContent, qrOptions);
+      if (dto.logoUrl) buf = await this.composeLogo(buf, dto.logoUrl, size);
+      output = `data:image/png;base64,${buf.toString('base64')}`;
     } else {
-      output = await QRCode.toBuffer(qrContent, qrOptions);
+      let buf = await QRCode.toBuffer(qrContent, qrOptions);
+      if (dto.logoUrl) buf = await this.composeLogo(buf, dto.logoUrl, size);
+      output = buf;
     }
 
     return { id: saved.id, format, data: output };
+  }
+
+  // ── Logo composite ─────────────────────────────────────────────────────────
+  private async composeLogo(qrBuffer: Buffer, logoUrl: string, qrSize: number): Promise<Buffer> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const sharp = require('sharp');
+      const logoSize = Math.round(qrSize * 0.22);
+
+      const res = await fetch(logoUrl);
+      if (!res.ok) return qrBuffer;
+      const logoBuffer = Buffer.from(await res.arrayBuffer());
+
+      const padding = Math.round(logoSize * 0.15);
+      const innerSize = logoSize - padding * 2;
+
+      const logo = await sharp(logoBuffer)
+        .resize(innerSize, innerSize, {
+          fit: 'contain',
+          background: { r: 255, g: 255, b: 255, alpha: 1 },
+        })
+        .flatten({ background: { r: 255, g: 255, b: 255 } })
+        .extend({
+          top: padding, bottom: padding, left: padding, right: padding,
+          background: { r: 255, g: 255, b: 255, alpha: 1 },
+        })
+        .png()
+        .toBuffer();
+
+      return sharp(qrBuffer)
+        .composite([{ input: logo, gravity: 'center' }])
+        .png()
+        .toBuffer();
+    } catch {
+      return qrBuffer; // nếu lỗi thì trả QR không có logo
+    }
   }
 
   // ── vCard builder ──────────────────────────────────────────────────────────
