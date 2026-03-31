@@ -24,6 +24,7 @@ import { UploadModule } from './upload/upload.module';
         autoLoadEntities: true,
         synchronize: config.get('NODE_ENV') !== 'production',
         logging: config.get('NODE_ENV') === 'development',
+        extra: { max: 10, idleTimeoutMillis: 30000 },
       }),
     }),
 

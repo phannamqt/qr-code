@@ -1,11 +1,12 @@
-import { IsEnum, IsOptional, IsString, IsInt, IsBoolean, Min, Max } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsNotEmpty, IsInt, IsBoolean, Min, Max } from 'class-validator';
 import { BarcodeType, BarcodeFormat } from '../entities/barcode.entity';
 
 export class GenerateBarcodeDto {
   @IsEnum(BarcodeType, { message: 'Loại barcode không hợp lệ' })
   type: BarcodeType;
 
-  @IsString({ message: 'Nội dung barcode không được để trống' })
+  @IsNotEmpty({ message: 'Nội dung barcode không được để trống' })
+  @IsString({ message: 'Nội dung barcode không hợp lệ' })
   content: string;
 
   @IsOptional()

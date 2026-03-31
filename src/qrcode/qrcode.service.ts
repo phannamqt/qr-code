@@ -175,16 +175,24 @@ export class QrCodeService {
 
     let output: string | Buffer;
 
-    if (format === QrCodeFormat.SVG) {
-      output = await QRCode.toString(qrContent, { ...qrOptions, type: 'svg' } as QRCode.QRCodeToStringOptions);
-    } else if (format === QrCodeFormat.BASE64) {
-      let buf = await QRCode.toBuffer(qrContent, qrOptions);
-      if (dto.logoUrl) buf = await this.composeLogo(buf, dto.logoUrl, size);
-      output = `data:image/png;base64,${buf.toString('base64')}`;
-    } else {
-      let buf = await QRCode.toBuffer(qrContent, qrOptions);
-      if (dto.logoUrl) buf = await this.composeLogo(buf, dto.logoUrl, size);
-      output = buf;
+    try {
+      if (format === QrCodeFormat.SVG) {
+        output = await QRCode.toString(qrContent, { ...qrOptions, type: 'svg' } as QRCode.QRCodeToStringOptions);
+      } else if (format === QrCodeFormat.BASE64) {
+        let buf = await QRCode.toBuffer(qrContent, qrOptions);
+        if (dto.logoUrl) buf = await this.composeLogo(buf, dto.logoUrl, size);
+        output = `data:image/png;base64,${buf.toString('base64')}`;
+      } else {
+        let buf = await QRCode.toBuffer(qrContent, qrOptions);
+        if (dto.logoUrl) buf = await this.composeLogo(buf, dto.logoUrl, size);
+        output = buf;
+      }
+    } catch (err) {
+      await this.qrRepo.delete(saved.id);
+      if (err.message?.toLowerCase().includes('too big') || err.message?.toLowerCase().includes('amount of data')) {
+        throw new BadRequestException('Nội dung quá dài, không thể tạo mã QR. Vui lòng rút ngắn lại.');
+      }
+      throw new BadRequestException(`Không thể tạo mã QR: ${err.message}`);
     }
 
     return { id: saved.id, format, data: output };

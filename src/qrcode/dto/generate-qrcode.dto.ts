@@ -2,6 +2,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsNotEmpty,
   IsInt,
   IsBoolean,
   IsUrl,
@@ -63,19 +64,22 @@ class QrDesignDto {
 
 // ── Website ──────────────────────────────────────────────────────────────────
 export class GenerateWebsiteDto extends QrDesignDto {
+  @IsNotEmpty({ message: 'URL không được để trống' })
   @IsUrl({}, { message: 'URL không hợp lệ' })
   url: string;
 }
 
 // ── Text ─────────────────────────────────────────────────────────────────────
 export class GenerateTextDto extends QrDesignDto {
-  @IsString({ message: 'Nội dung văn bản không được để trống' })
+  @IsNotEmpty({ message: 'Nội dung văn bản không được để trống' })
+  @IsString({ message: 'Nội dung không hợp lệ' })
   text: string;
 }
 
 // ── vCard (Digital Business Card) ────────────────────────────────────────────
 export class GenerateVCardDto extends QrDesignDto {
-  @IsString({ message: 'Tên không được để trống' })
+  @IsNotEmpty({ message: 'Tên không được để trống' })
+  @IsString({ message: 'Tên không hợp lệ' })
   firstName: string;
 
   @IsOptional()
@@ -121,7 +125,8 @@ export class GenerateVCardDto extends QrDesignDto {
 
 // ── WiFi ─────────────────────────────────────────────────────────────────────
 export class GenerateWifiDto extends QrDesignDto {
-  @IsString({ message: 'Tên mạng (SSID) không được để trống' })
+  @IsNotEmpty({ message: 'Tên mạng (SSID) không được để trống' })
+  @IsString({ message: 'Tên mạng (SSID) không hợp lệ' })
   ssid: string;
 
   @IsOptional()
@@ -138,6 +143,7 @@ export class GenerateWifiDto extends QrDesignDto {
 
 // ── PDF ──────────────────────────────────────────────────────────────────────
 export class GeneratePdfDto extends QrDesignDto {
+  @IsNotEmpty({ message: 'URL file PDF không được để trống' })
   @IsUrl({ require_tld: false }, { message: 'URL file PDF không hợp lệ' })
   pdfUrl: string;
 }

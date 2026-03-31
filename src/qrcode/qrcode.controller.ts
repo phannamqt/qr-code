@@ -8,7 +8,6 @@ import {
   Res,
   HttpCode,
   HttpStatus,
-  Redirect,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { QrCodeService } from './qrcode.service';
@@ -63,10 +62,9 @@ export class QrCodeController {
   }
 
   @Get(':id/redirect')
-  @Redirect()
-  async redirectScan(@Param('id') id: string) {
+  async redirectScan(@Param('id') id: string, @Res() res: Response) {
     const { url } = await this.qrService.redirect(id);
-    return { url, statusCode: HttpStatus.FOUND };
+    return res.redirect(HttpStatus.FOUND, url);
   }
 
   @Get(':id')
