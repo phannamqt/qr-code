@@ -51,7 +51,7 @@ export class UploadController {
   )
   uploadPdf(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
     if (!file) throw new BadRequestException('Không có file nào được tải lên');
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/pdf/${file.filename}`;
+    const fileUrl = `${(process.env.APP_URL ?? '').replace(/\/$/, '')}/uploads/pdf/${file.filename}`;
     return { fileName: file.filename, url: fileUrl };
   }
 
@@ -83,7 +83,7 @@ export class UploadController {
   )
   uploadLogo(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
     if (!file) throw new BadRequestException('Không có file nào được tải lên');
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/logos/${file.filename}`;
+    const fileUrl = `${(process.env.APP_URL ?? '').replace(/\/$/, '')}/uploads/logos/${file.filename}`;
     return { fileName: file.filename, url: fileUrl };
   }
 }

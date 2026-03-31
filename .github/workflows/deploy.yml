@@ -79,7 +79,7 @@ jobs:
 
             upsert_env NODE_ENV        production
             upsert_env APP_PORT        3000
-            upsert_env APP_URL         https://qr-code.phannam.com/
+            upsert_env APP_URL         https://qr-code.phannam.com
             upsert_env DB_HOST         "${{ secrets.DB_HOST }}"
             upsert_env DB_USERNAME     "${{ secrets.DB_USERNAME }}"
             upsert_env DB_PASSWORD     "${{ secrets.DB_PASSWORD }}"

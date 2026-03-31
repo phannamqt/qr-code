@@ -23,7 +23,6 @@ import {
   GenerateWifiDto,
   GeneratePdfDto,
   GenerateAppStoreDto,
-  WifiEncryption,
 } from './dto/generate-qrcode.dto';
 
 @Injectable()
@@ -93,7 +92,7 @@ export class QrCodeService {
     if (!entity) throw new NotFoundException('Không tìm thấy mã QR');
     if (!entity.scanTracking) return entity;
     await this.qrRepo.increment({ id }, 'scanCount', 1);
-    return this.qrRepo.findOneBy({ id });
+    return await this.qrRepo.findOneBy({ id });
   }
 
   async redirect(id: string): Promise<{ url: string }> {
@@ -161,7 +160,7 @@ export class QrCodeService {
     // For URL-based types with scan tracking, encode redirect URL into QR
     const qrContent =
       scanTracking && REDIRECTABLE_TYPES.includes(type)
-        ? `${process.env.APP_URL ?? ''}/qrcode/${saved.id}/redirect`
+        ? `${(process.env.APP_URL ?? '').replace(/\/$/, '')}/qrcode/${saved.id}/redirect`
         : content;
 
     const qrOptions: QRCode.QRCodeToBufferOptions = {

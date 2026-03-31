@@ -157,4 +157,6 @@ export class GenerateAppStoreDto extends QrDesignDto {
   @IsOptional()
   @IsUrl({}, { message: 'URL Google Play không hợp lệ' })
   androidUrl?: string;
+
+  // Đảm bảo ít nhất một URL được cung cấp — validated ở service
 }
