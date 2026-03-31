@@ -592,6 +592,24 @@
         </div>
       </div>
 
+      <!-- Scan count card -->
+      <div x-show="codeId && qr.tracking && tab==='qr'" x-transition class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="section-label mb-0">Lượt quét</p>
+            <p class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1" x-text="scanCount ?? '—'"></p>
+          </div>
+          <button @click="refreshScanCount()"
+            :class="scanCountLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700'"
+            class="p-2 rounded-lg transition-colors"
+            :disabled="scanCountLoading">
+            <svg class="w-5 h-5 text-gray-500" :class="scanCountLoading ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <!-- Download card -->
       <div x-show="preview && !loading" x-transition class="card space-y-2">
         <p class="section-label">Tải xuống</p>
@@ -645,6 +663,8 @@ function app() {
     preview: null,
     previewBlob: null,
     codeId: null,
+    scanCount: null,
+    scanCountLoading: false,
     decodeFile: null,
     decodePreview: null,
     decodeResult: null,
@@ -694,6 +714,17 @@ function app() {
         localStorage.setItem('dark', v ? '1' : '0');
         document.documentElement.classList.toggle('dark', v);
       });
+      // Khôi phục QR tracking gần nhất
+      const saved = localStorage.getItem('lastTrackingQr');
+      if (saved) {
+        try {
+          const { id } = JSON.parse(saved);
+          this.codeId = id;
+          this.qr.tracking = true;
+          this.scanCount = 0;
+          this.refreshScanCount();
+        } catch {}
+      }
     },
 
     toggleDark() { this.dark = !this.dark; },
@@ -702,7 +733,7 @@ function app() {
 
     clearResult() {
       if (this.preview && this.preview.startsWith('blob:')) URL.revokeObjectURL(this.preview);
-      this.preview = null; this.previewBlob = null; this.codeId = null; this.err = null;
+      this.preview = null; this.previewBlob = null; this.codeId = null; this.err = null; this.scanCount = null;
     },
 
     clearDecode() {
@@ -715,6 +746,17 @@ function app() {
         fgColor: this.qr.fg, bgColor: this.qr.bg,
         logoUrl: this.qr.logo || undefined, scanTracking: this.qr.tracking,
       };
+    },
+
+    async refreshScanCount() {
+      if (!this.codeId || this.scanCountLoading) return;
+      this.scanCountLoading = true;
+      try {
+        const res = await fetch(`/qrcode/${this.codeId}`);
+        if (res.ok) { const d = await res.json(); this.scanCount = d.scanCount ?? 0; }
+      } finally {
+        this.scanCountLoading = false;
+      }
     },
 
     async uploadPdf(file) {
@@ -753,6 +795,11 @@ function app() {
         this.codeId = res.headers.get('X-QrCode-Id');
         if (this.qr.fmt === 'base64') { const j = await res.json(); this.preview = j.data; }
         else { const blob = await res.blob(); this.previewBlob = blob; this.preview = URL.createObjectURL(blob); }
+        if (this.qr.tracking) {
+          this.scanCount = 0;
+          this.refreshScanCount();
+          localStorage.setItem('lastTrackingQr', JSON.stringify({ id: this.codeId }));
+        }
         // scroll to preview on mobile
         if (window.innerWidth < 1024) this.$nextTick(() => document.querySelector('#preview-anchor')?.scrollIntoView({ behavior: 'smooth' }));
       } catch (e) { this.err = e.message; }
