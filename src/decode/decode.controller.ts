@@ -27,14 +27,14 @@ export class DecodeController {
         if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException(`Unsupported file type: ${file.mimetype}`), false);
+          cb(new BadRequestException(`Định dạng file không được hỗ trợ: ${file.mimetype}`), false);
         }
       },
     }),
   )
   async decode(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('No file uploaded. Use form-data field "file".');
+      throw new BadRequestException('Không có file nào được tải lên');
     }
     return this.decodeService.decodeImage(file);
   }

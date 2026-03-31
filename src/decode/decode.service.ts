@@ -43,7 +43,7 @@ export class DecodeService {
       const results = await readBarcodesFromImageData(imageData);
 
       if (results.length === 0) {
-        throw new Error('No barcode or QR code detected in image');
+        throw new Error('Không tìm thấy mã QR hoặc barcode trong ảnh');
       }
 
       const first = results[0];
@@ -67,7 +67,7 @@ export class DecodeService {
     );
 
     if (!isSuccess) {
-      throw new BadRequestException(errorMessage ?? 'Failed to decode image');
+      throw new BadRequestException(errorMessage ?? 'Không thể đọc mã từ ảnh');
     }
 
     return { success: true, codeType, text: decodedText };

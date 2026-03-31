@@ -140,7 +140,7 @@ export class GenerateWifiDto extends QrDesignDto {
 
 // ── PDF ──────────────────────────────────────────────────────────────────────
 export class GeneratePdfDto extends QrDesignDto {
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   pdfUrl: string;
 }
 

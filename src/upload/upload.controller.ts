@@ -44,13 +44,13 @@ export class UploadController {
         if (file.mimetype === 'application/pdf') {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Only PDF files are allowed'), false);
+          cb(new BadRequestException('Chỉ chấp nhận file PDF'), false);
         }
       },
     }),
   )
   uploadPdf(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
-    if (!file) throw new BadRequestException('No file uploaded');
+    if (!file) throw new BadRequestException('Không có file nào được tải lên');
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/pdf/${file.filename}`;
     return { fileName: file.filename, url: fileUrl };
   }
@@ -76,13 +76,13 @@ export class UploadController {
         if (['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Only PNG, JPG, WebP, SVG images are allowed'), false);
+          cb(new BadRequestException('Chỉ chấp nhận ảnh PNG, JPG, WebP hoặc SVG'), false);
         }
       },
     }),
   )
   uploadLogo(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
-    if (!file) throw new BadRequestException('No file uploaded');
+    if (!file) throw new BadRequestException('Không có file nào được tải lên');
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/logos/${file.filename}`;
     return { fileName: file.filename, url: fileUrl };
   }

@@ -3,7 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>QR & Barcode Generator</title>
+
+  <title>Tạo Mã QR & Barcode Miễn Phí Online | QR Generator</title>
+  <meta name="description" content="Công cụ tạo mã QR và barcode miễn phí online. Hỗ trợ QR website, WiFi, vCard, PDF, App Store. Tạo barcode Code 128, EAN-13, QR Code nhanh chóng, không cần đăng ký." />
+  <meta name="keywords" content="tạo mã QR, tạo QR code, qr code online, mã qr miễn phí, tạo barcode, barcode online, qr wifi, qr vcard, qr website, scan mã vạch, đọc mã QR" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://qr.yourdomain.com/" />
+
+  <!-- Open Graph (Facebook / Zalo) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://qr.yourdomain.com/" />
+  <meta property="og:title" content="Tạo Mã QR & Barcode Miễn Phí Online" />
+  <meta property="og:description" content="Tạo mã QR cho website, WiFi, vCard, PDF, App Store và barcode đủ loại. Miễn phí, nhanh, không cần đăng ký." />
+  <meta property="og:image" content="https://qr.yourdomain.com/logo.png" />
+  <meta property="og:locale" content="vi_VN" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Tạo Mã QR & Barcode Miễn Phí Online" />
+  <meta name="twitter:description" content="Tạo mã QR cho website, WiFi, vCard, PDF, App Store và barcode đủ loại. Miễn phí, nhanh, không cần đăng ký." />
+  <meta name="twitter:image" content="https://qr.yourdomain.com/logo.png" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "QR & Barcode Generator",
+    "url": "https://qr.yourdomain.com",
+    "description": "Công cụ tạo mã QR và barcode miễn phí online",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "All",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
+    "inLanguage": "vi"
+  }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -57,7 +91,8 @@
 
     <!-- Logo -->
     <div class="flex items-center gap-2 flex-shrink-0">
-      <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-black">QR</div>
+      <img x-show="dark" src="/logo.png"  alt="Logo" class="w-8 h-8 object-contain" />
+      <img x-show="!dark" src="/logo2.png" alt="Logo" class="w-8 h-8 object-contain" />
       <span class="font-bold text-gray-900 dark:text-white hidden sm:block">QR & Barcode</span>
     </div>
 
@@ -194,10 +229,41 @@
         </div>
 
         <!-- PDF -->
-        <div x-show="qrType==='pdf'" class="space-y-2">
-          <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">URL file PDF *</label>
-          <p class="text-xs text-gray-400 dark:text-gray-500">Upload trước qua <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">/upload/pdf</code> rồi dán URL vào đây.</p>
-          <input x-model="qr.pdfUrl" type="url" placeholder="https://..." class="inp" />
+        <div x-show="qrType==='pdf'" class="space-y-3">
+          <!-- [UPLOAD DISABLED] Bật lại khi server có đủ dung lượng
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">File PDF *</label>
+            <label class="relative flex flex-col items-center justify-center gap-2 w-full rounded-xl border-2 border-dashed cursor-pointer transition-colors"
+              :class="pdfUpload.dragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-400'"
+              @dragover.prevent="pdfUpload.dragging=true"
+              @dragleave.prevent="pdfUpload.dragging=false"
+              @drop.prevent="uploadPdf($event.dataTransfer.files[0]); pdfUpload.dragging=false">
+              <input type="file" accept="application/pdf" class="sr-only" @change="uploadPdf($event.target.files[0])" />
+              <div x-show="!pdfUpload.loading && !pdfUpload.name" class="py-6 text-center">
+                <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Kéo thả hoặc <span class="text-indigo-600 font-medium">chọn file</span></p>
+                <p class="text-xs text-gray-400 mt-1">PDF · tối đa 50 MB</p>
+              </div>
+              <div x-show="pdfUpload.loading" class="py-6 flex flex-col items-center gap-2">
+                <svg class="w-6 h-6 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                <p class="text-sm text-gray-500">Đang tải lên…</p>
+              </div>
+              <div x-show="!pdfUpload.loading && pdfUpload.name" class="py-4 flex items-center gap-3 px-4 w-full">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium truncate" x-text="pdfUpload.name"></p>
+                  <p class="text-xs text-gray-400">Đã upload · chọn file khác để thay</p>
+                </div>
+              </div>
+            </label>
+            <p x-show="pdfUpload.error" class="text-xs text-red-500 mt-1" x-text="pdfUpload.error"></p>
+          </div>
+          -->
+
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">URL file PDF *</label>
+            <input x-model="qr.pdfUrl" type="url" placeholder="https://..." class="inp" />
+          </div>
         </div>
 
         <!-- App Store -->
@@ -271,8 +337,8 @@
           <input x-model="qr.logo" type="url" placeholder="https://..." class="inp" />
         </div>
 
-        <!-- Scan Tracking toggle -->
-        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+        <!-- Scan Tracking toggle — only for URL-based types -->
+        <div x-show="['website','pdf','appstore'].includes(qrType)" class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
           <div>
             <p class="text-sm font-semibold">Scan Tracking</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">Đếm số lần quét mã</p>
@@ -491,7 +557,7 @@
       <!-- Preview card -->
       <div class="card">
         <div class="flex items-center justify-between mb-4">
-          <p class="section-label mb-0">Preview</p>
+          <p class="section-label mb-0">Xem trước</p>
           <span x-show="codeId"
             class="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg text-gray-500 dark:text-gray-400"
             x-text="'#' + (codeId?.slice(0,8) ?? '')"></span>
@@ -596,6 +662,8 @@ function app() {
       fg: '#000000', bg: '#ffffff', logo: '', tracking: false,
     },
 
+    pdfUpload: { loading: false, name: '', error: '', dragging: false },
+
     bc: { type: 'code128', content: '', fmt: 'png', w: 200, h: 80, fg: '#000000', bg: '#ffffff', showText: true },
 
     qrTypes: [
@@ -647,6 +715,23 @@ function app() {
         fgColor: this.qr.fg, bgColor: this.qr.bg,
         logoUrl: this.qr.logo || undefined, scanTracking: this.qr.tracking,
       };
+    },
+
+    async uploadPdf(file) {
+      if (!file) return;
+      if (file.type !== 'application/pdf') { this.pdfUpload.error = 'Chỉ chấp nhận file PDF'; return; }
+      this.pdfUpload = { loading: true, name: '', error: '', dragging: false };
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await fetch('/upload/pdf', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message ?? 'Upload thất bại');
+        this.qr.pdfUrl = json.url;
+        this.pdfUpload = { loading: false, name: file.name, error: '', dragging: false };
+      } catch (e) {
+        this.pdfUpload = { loading: false, name: '', error: e.message, dragging: false };
+      }
     },
 
     async generateQR() {

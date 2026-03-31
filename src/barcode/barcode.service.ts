@@ -36,7 +36,7 @@ export class BarcodeService {
         data = Buffer.from(await bwipjs.toBuffer(bwipOptions));
       }
     } catch (err) {
-      throw new BadRequestException(`Cannot generate barcode: ${err.message}`);
+      throw new BadRequestException(`Không thể tạo barcode: ${err.message}`);
     }
 
     const entity = this.barcodeRepo.create({

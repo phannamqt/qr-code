@@ -2,11 +2,13 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Param,
   Body,
   Res,
   HttpCode,
   HttpStatus,
+  Redirect,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { QrCodeService } from './qrcode.service';
@@ -60,6 +62,13 @@ export class QrCodeController {
     return this.sendResponse(await this.qrService.generateAppStore(dto), res);
   }
 
+  @Get(':id/redirect')
+  @Redirect()
+  async redirectScan(@Param('id') id: string) {
+    const { url } = await this.qrService.redirect(id);
+    return { url, statusCode: HttpStatus.FOUND };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.qrService.findOne(id);
@@ -69,6 +78,12 @@ export class QrCodeController {
   @HttpCode(HttpStatus.OK)
   async trackScan(@Param('id') id: string) {
     return this.qrService.trackScan(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteQr(@Param('id') id: string) {
+    return this.qrService.deleteQr(id);
   }
 
   private sendResponse(result: { id: string; format: QrCodeFormat; data: any }, res: Response) {
