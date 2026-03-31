@@ -80,7 +80,6 @@ jobs:
             upsert_env NODE_ENV        production
             upsert_env APP_PORT        3000
             upsert_env DB_HOST         "${{ secrets.DB_HOST }}"
-            upsert_env DB_PORT         "${{ secrets.DB_PORT }}"
             upsert_env DB_USERNAME     "${{ secrets.DB_USERNAME }}"
             upsert_env DB_PASSWORD     "${{ secrets.DB_PASSWORD }}"
             upsert_env DB_NAME         "${{ secrets.DB_NAME }}"
