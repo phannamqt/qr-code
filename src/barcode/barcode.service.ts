@@ -15,14 +15,14 @@ export class BarcodeService {
   async generate(dto: GenerateBarcodeDto): Promise<{ id: string; format: BarcodeFormat; data: Buffer | string }> {
     const format = dto.format ?? BarcodeFormat.PNG;
 
-    const bwipOptions: bwipjs.ToBufferOptions = {
+    const bwipOptions: bwipjs.RenderOptions = {
       bcid: dto.type as string,
       text: dto.content,
       scale: 3,
       height: Math.round((dto.height ?? 80) / 10),
       width: Math.round((dto.width ?? 200) / 10),
       includetext: dto.showText ?? true,
-      textxalign: 'center',
+      textxalign: 'center' as const,
       backgroundcolor: (dto.bgColor ?? '#ffffff').replace('#', ''),
       barcolor: (dto.fgColor ?? '#000000').replace('#', ''),
     };
@@ -33,7 +33,7 @@ export class BarcodeService {
       if (format === BarcodeFormat.SVG) {
         data = bwipjs.toSVG(bwipOptions);
       } else {
-        data = await bwipjs.toBuffer(bwipOptions);
+        data = Buffer.from(await bwipjs.toBuffer(bwipOptions));
       }
     } catch (err) {
       throw new BadRequestException(`Cannot generate barcode: ${err.message}`);

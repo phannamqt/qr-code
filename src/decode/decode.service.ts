@@ -22,6 +22,8 @@ export class DecodeService {
     let errorMessage: string | null = null;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore – zxing-wasm uses package.json exports, not supported with moduleResolution:node
       const { readBarcodesFromImageData } = await import('zxing-wasm/reader');
       const sharp = (await import('sharp')).default;
 

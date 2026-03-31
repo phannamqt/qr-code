@@ -87,7 +87,7 @@ export class QrCodeService {
     const size: number = dto.size ?? 300;
     const errorCorrection: ErrorCorrectionLevel = dto.errorCorrection ?? ErrorCorrectionLevel.M;
 
-    const qrOptions: QRCode.QRCodeOptions = {
+    const qrOptions: QRCode.QRCodeToBufferOptions = {
       errorCorrectionLevel: errorCorrection,
       width: size,
       color: {
@@ -99,9 +99,9 @@ export class QrCodeService {
     let output: string | Buffer;
 
     if (format === QrCodeFormat.SVG) {
-      output = await QRCode.toString(content, { ...qrOptions, type: 'svg' });
+      output = await QRCode.toString(content, { ...qrOptions, type: 'svg' } as QRCode.QRCodeToStringOptions);
     } else if (format === QrCodeFormat.BASE64) {
-      output = await QRCode.toDataURL(content, qrOptions);
+      output = await QRCode.toDataURL(content, qrOptions as unknown as QRCode.QRCodeToDataURLOptions);
     } else {
       output = await QRCode.toBuffer(content, qrOptions);
     }
