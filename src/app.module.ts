@@ -27,10 +27,16 @@ import { UploadModule } from './upload/upload.module';
       }),
     }),
 
-    ServeStaticModule.forRoot({
-      rootPath: path.join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
-    }),
+    ServeStaticModule.forRoot(
+      {
+        rootPath: path.join(process.cwd(), 'public'),
+        // serves index.html at / — API routes take priority
+      },
+      {
+        rootPath: path.join(process.cwd(), 'uploads'),
+        serveRoot: '/uploads',
+      },
+    ),
 
     QrCodeModule,
     BarcodeModule,

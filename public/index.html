@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>QR & Barcode Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { primary: '#6366f1' },
+          keyframes: { fadeIn: { from: { opacity: 0, transform: 'translateY(8px)' }, to: { opacity: 1, transform: 'translateY(0)' } } },
+          animation: { fadeIn: 'fadeIn 0.2s ease-out' },
+        }
+      }
+    }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .inp {
+      width: 100%; border-radius: 0.5rem; padding: 0.5rem 0.75rem;
+      font-size: 0.875rem; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+      border: 1px solid #e5e7eb; background: #fff; color: #111827;
+    }
+    .dark .inp { border-color: #374151; background: #1f2937; color: #f9fafb; }
+    .inp:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .inp::placeholder { color: #9ca3af; }
+    .dark .inp::placeholder { color: #6b7280; }
+    select.inp { cursor: pointer; }
+    textarea.inp { resize: none; }
+    .btn-primary {
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      width: 100%; padding: 0.75rem 1.5rem; border-radius: 0.75rem;
+      background: #6366f1; color: #fff; font-weight: 600; font-size: 0.9rem;
+      border: none; cursor: pointer; transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-primary:hover:not(:disabled) { background: #4f46e5; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.875rem; padding: 1.25rem; }
+    .dark .card { background: #111827; border-color: #1f2937; }
+    .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #6b7280; margin-bottom: 0.75rem; }
+    .dark .section-label { color: #9ca3af; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; transition: background 0.2s, color 0.2s; }
+  </style>
+</head>
+
+<body x-data="app()" x-cloak class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+
+<!-- ──────────────── HEADER ──────────────── -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-black">QR</div>
+      <span class="font-bold text-gray-900 dark:text-white hidden sm:block">QR & Barcode</span>
+    </div>
+
+    <!-- Main Tabs -->
+    <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+      <template x-for="t in [{id:'qr',label:'QR Code'},{id:'barcode',label:'Barcode'},{id:'decode',label:'Decode'}]" :key="t.id">
+        <button @click="switchTab(t.id)"
+          :class="tab===t.id ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+          class="px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap"
+          x-text="t.label">
+        </button>
+      </template>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button @click="toggleDark()"
+      class="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
+      <svg x-show="!dark" class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      </svg>
+      <svg x-show="dark" class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- ──────────────── MAIN ──────────────── -->
+<main class="max-w-5xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+  <!-- ════════ FORM PANEL (3/5) ════════ -->
+  <div class="lg:col-span-3 space-y-4">
+
+    <!-- ── QR CODE TAB ── -->
+    <div x-show="tab==='qr'" class="space-y-4" x-transition:enter="animate-fadeIn">
+
+      <!-- Type selector -->
+      <div class="card">
+        <p class="section-label">Loại nội dung</p>
+        <div class="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+          <template x-for="t in qrTypes" :key="t.id">
+            <button @click="qrType=t.id; clearResult()"
+              :class="qrType===t.id
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-300'
+                : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'"
+              class="flex-shrink-0 flex flex-col items-center gap-1 px-4 py-3 rounded-xl border-2 transition-all min-w-[76px] cursor-pointer">
+              <span class="text-2xl leading-none" x-text="t.icon"></span>
+              <span class="text-xs font-semibold whitespace-nowrap" x-text="t.label"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Content form -->
+      <div class="card space-y-3">
+        <p class="section-label">Nội dung</p>
+
+        <!-- Website -->
+        <div x-show="qrType==='website'">
+          <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">URL *</label>
+          <input x-model="qr.url" type="url" placeholder="https://example.com" class="inp" />
+        </div>
+
+        <!-- Text -->
+        <div x-show="qrType==='text'">
+          <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Văn bản *</label>
+          <textarea x-model="qr.text" rows="4" placeholder="Nhập nội dung..." class="inp"></textarea>
+        </div>
+
+        <!-- vCard -->
+        <div x-show="qrType==='vcard'" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Tên *</label>
+            <input x-model="qr.firstName" placeholder="Nguyễn" class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Họ</label>
+            <input x-model="qr.lastName" placeholder="Văn A" class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Công ty</label>
+            <input x-model="qr.org" placeholder="ACME Corp" class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Chức vụ</label>
+            <input x-model="qr.jobTitle" placeholder="Developer" class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Email</label>
+            <input x-model="qr.email" type="email" placeholder="name@email.com" class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Điện thoại</label>
+            <input x-model="qr.phone" placeholder="+84..." class="inp" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Website</label>
+            <input x-model="qr.vcardWebsite" placeholder="https://..." class="inp" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Địa chỉ</label>
+            <input x-model="qr.address" placeholder="123 Đường ABC, TP.HCM" class="inp" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Ghi chú</label>
+            <input x-model="qr.note" placeholder="..." class="inp" />
+          </div>
+        </div>
+
+        <!-- WiFi -->
+        <div x-show="qrType==='wifi'" class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Tên mạng (SSID) *</label>
+            <input x-model="qr.ssid" placeholder="MyWifi" class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Mật khẩu</label>
+            <input x-model="qr.pass" type="password" placeholder="••••••••" class="inp" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Mã hóa</label>
+              <select x-model="qr.enc" class="inp">
+                <option value="WPA">WPA / WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">Không có</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-2 pt-5">
+              <input x-model="qr.hidden" type="checkbox" id="chkHidden" class="w-4 h-4 accent-indigo-600" />
+              <label for="chkHidden" class="text-sm text-gray-700 dark:text-gray-300">Mạng ẩn</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF -->
+        <div x-show="qrType==='pdf'" class="space-y-2">
+          <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">URL file PDF *</label>
+          <p class="text-xs text-gray-400 dark:text-gray-500">Upload trước qua <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">/upload/pdf</code> rồi dán URL vào đây.</p>
+          <input x-model="qr.pdfUrl" type="url" placeholder="https://..." class="inp" />
+        </div>
+
+        <!-- App Store -->
+        <div x-show="qrType==='appstore'" class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">iOS App Store URL</label>
+            <input x-model="qr.iosUrl" type="url" placeholder="https://apps.apple.com/..." class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Google Play URL</label>
+            <input x-model="qr.androidUrl" type="url" placeholder="https://play.google.com/..." class="inp" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Design -->
+      <div class="card space-y-4">
+        <p class="section-label">Thiết kế</p>
+
+        <!-- Colors -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium mb-1.5 text-gray-600 dark:text-gray-400">Màu mã QR</label>
+            <div class="flex items-center gap-2">
+              <input x-model="qr.fg" type="color" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer p-0.5 bg-white dark:bg-gray-800" />
+              <input x-model="qr.fg" type="text" class="inp flex-1 font-mono" maxlength="7" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1.5 text-gray-600 dark:text-gray-400">Màu nền</label>
+            <div class="flex items-center gap-2">
+              <input x-model="qr.bg" type="color" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer p-0.5 bg-white dark:bg-gray-800" />
+              <input x-model="qr.bg" type="text" class="inp flex-1 font-mono" maxlength="7" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Size -->
+        <div>
+          <label class="block text-xs font-medium mb-2 text-gray-600 dark:text-gray-400">
+            Kích thước: <span class="text-indigo-600 dark:text-indigo-400 font-bold" x-text="qr.size + 'px'"></span>
+          </label>
+          <input x-model.number="qr.size" type="range" min="100" max="1000" step="50" class="w-full accent-indigo-600 h-1.5 rounded-full cursor-pointer" />
+          <div class="flex justify-between text-xs text-gray-400 mt-1"><span>100px</span><span>1000px</span></div>
+        </div>
+
+        <!-- Format + Error correction -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Định dạng xuất</label>
+            <select x-model="qr.fmt" class="inp">
+              <option value="png">PNG (ảnh)</option>
+              <option value="svg">SVG (vector)</option>
+              <option value="base64">Base64</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Error Correction</label>
+            <select x-model="qr.ec" class="inp">
+              <option value="L">L – 7%</option>
+              <option value="M">M – 15%</option>
+              <option value="Q">Q – 25%</option>
+              <option value="H">H – 30%</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Logo URL -->
+        <div>
+          <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Logo URL (tuỳ chọn)</label>
+          <input x-model="qr.logo" type="url" placeholder="https://..." class="inp" />
+        </div>
+
+        <!-- Scan Tracking toggle -->
+        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+          <div>
+            <p class="text-sm font-semibold">Scan Tracking</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Đếm số lần quét mã</p>
+          </div>
+          <button @click="qr.tracking=!qr.tracking"
+            :class="qr.tracking ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'"
+            class="relative w-11 h-6 rounded-full transition-colors flex-shrink-0">
+            <span :class="qr.tracking ? 'translate-x-5' : 'translate-x-0.5'"
+              class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Generate QR button -->
+      <button @click="generateQR()" :disabled="loading" class="btn-primary">
+        <template x-if="!loading">
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+            Tạo QR Code
+          </span>
+        </template>
+        <template x-if="loading">
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            Đang tạo...
+          </span>
+        </template>
+      </button>
+    </div>
+
+    <!-- ── BARCODE TAB ── -->
+    <div x-show="tab==='barcode'" class="space-y-4" x-transition:enter="animate-fadeIn">
+
+      <!-- Type picker -->
+      <div class="card">
+        <p class="section-label">Loại Barcode</p>
+        <div class="grid grid-cols-2 gap-2">
+          <template x-for="t in barcodeTypes" :key="t.id">
+            <button @click="bc.type=t.id; clearResult()"
+              :class="bc.type===t.id
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-300'
+                : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'"
+              class="p-3 rounded-xl border-2 text-left transition-all cursor-pointer">
+              <p class="font-mono font-bold text-sm" x-text="t.label"></p>
+              <p class="text-xs opacity-50 mt-0.5" x-text="t.example"></p>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Barcode options -->
+      <div class="card space-y-4">
+        <p class="section-label">Nội dung & Thiết kế</p>
+
+        <div>
+          <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Nội dung *</label>
+          <input x-model="bc.content" :placeholder="barcodeTypes.find(t=>t.id===bc.type)?.example" class="inp" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Chiều rộng (px)</label>
+            <input x-model.number="bc.w" type="number" min="50" max="2000" class="inp" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Chiều cao (px)</label>
+            <input x-model.number="bc.h" type="number" min="20" max="500" class="inp" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium mb-1.5 text-gray-600 dark:text-gray-400">Màu mã</label>
+            <div class="flex items-center gap-2">
+              <input x-model="bc.fg" type="color" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer p-0.5 bg-white dark:bg-gray-800" />
+              <input x-model="bc.fg" type="text" class="inp flex-1 font-mono" maxlength="7" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1.5 text-gray-600 dark:text-gray-400">Màu nền</label>
+            <div class="flex items-center gap-2">
+              <input x-model="bc.bg" type="color" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer p-0.5 bg-white dark:bg-gray-800" />
+              <input x-model="bc.bg" type="text" class="inp flex-1 font-mono" maxlength="7" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Định dạng</label>
+            <select x-model="bc.fmt" class="inp">
+              <option value="png">PNG</option>
+              <option value="svg">SVG</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2 pt-5">
+            <input x-model="bc.showText" type="checkbox" id="chkBcText" class="w-4 h-4 accent-indigo-600" />
+            <label for="chkBcText" class="text-sm text-gray-700 dark:text-gray-300">Hiện text</label>
+          </div>
+        </div>
+      </div>
+
+      <button @click="generateBarcode()" :disabled="loading" class="btn-primary">
+        <template x-if="!loading">
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="6" width="2" height="12" rx="1" fill="currentColor"/><rect x="8" y="6" width="1" height="12" rx="0.5" fill="currentColor"/><rect x="11" y="6" width="3" height="12" rx="1" fill="currentColor"/><rect x="16" y="6" width="1" height="12" rx="0.5" fill="currentColor"/><rect x="19" y="6" width="2" height="12" rx="1" fill="currentColor"/></svg>
+            Tạo Barcode
+          </span>
+        </template>
+        <template x-if="loading">
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            Đang tạo...
+          </span>
+        </template>
+      </button>
+    </div>
+
+    <!-- ── DECODE TAB ── -->
+    <div x-show="tab==='decode'" class="space-y-4" x-transition:enter="animate-fadeIn">
+      <div class="card">
+        <p class="section-label">Upload ảnh để đọc mã</p>
+
+        <!-- Drop zone -->
+        <div
+          @dragover.prevent="dragging=true"
+          @dragleave.prevent="dragging=false"
+          @drop.prevent="handleDrop($event)"
+          @click="$refs.fileInput.click()"
+          :class="dragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 scale-[1.01]' : 'border-gray-300 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600'"
+          class="relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-150">
+
+          <input x-ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFile($event)" />
+
+          <!-- Empty state -->
+          <div x-show="!decodeFile">
+            <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Kéo thả ảnh vào đây</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">hoặc <span class="text-indigo-600 dark:text-indigo-400 font-medium">click để chọn file</span></p>
+            <p class="text-xs text-gray-300 dark:text-gray-600 mt-2">PNG · JPG · WebP · GIF · BMP — tối đa 10MB</p>
+          </div>
+
+          <!-- File selected state -->
+          <div x-show="decodeFile" class="space-y-2">
+            <img :src="decodePreview" class="max-h-48 mx-auto rounded-xl object-contain shadow" />
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300" x-text="decodeFile?.name"></p>
+            <p class="text-xs text-gray-400" x-text="decodeFile ? (decodeFile.size/1024).toFixed(1) + ' KB' : ''"></p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div x-show="decodeFile" class="flex gap-2 mt-3">
+          <button @click="decodeImage()" :disabled="loading" class="btn-primary flex-1">
+            <template x-if="!loading"><span>🔍 Đọc mã</span></template>
+            <template x-if="loading">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                Đang đọc...
+              </span>
+            </template>
+          </button>
+          <button @click="clearDecode()"
+            class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            Xoá
+          </button>
+        </div>
+      </div>
+
+      <!-- Decode result -->
+      <div x-show="decodeResult" x-transition class="card space-y-3 animate-fadeIn">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-green-500"></div>
+          <p class="font-semibold text-sm">Kết quả</p>
+          <span class="ml-auto px-2.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-semibold" x-text="decodeResult?.codeType"></span>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+          <p class="text-sm break-all font-mono leading-relaxed" x-text="decodeResult?.text"></p>
+        </div>
+        <div class="flex gap-2">
+          <button @click="copyText(decodeResult?.text)"
+            class="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Sao chép
+          </button>
+          <template x-if="isUrl(decodeResult?.text)">
+            <a :href="decodeResult?.text" target="_blank" rel="noopener"
+              class="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              Mở link
+            </a>
+          </template>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end form panel -->
+
+  <!-- ════════ PREVIEW PANEL (2/5) ════════ -->
+  <div class="lg:col-span-2">
+    <div class="lg:sticky lg:top-20 space-y-4">
+
+      <!-- Error banner -->
+      <div x-show="err" x-transition class="bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800/60 rounded-xl p-4">
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <p class="text-sm text-red-700 dark:text-red-400" x-text="err"></p>
+        </div>
+      </div>
+
+      <!-- Preview card -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <p class="section-label mb-0">Preview</p>
+          <span x-show="codeId"
+            class="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg text-gray-500 dark:text-gray-400"
+            x-text="'#' + (codeId?.slice(0,8) ?? '')"></span>
+        </div>
+
+        <!-- Empty state -->
+        <div x-show="!preview && !loading"
+          class="aspect-square max-w-[280px] mx-auto rounded-2xl bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center gap-3">
+          <div class="grid grid-cols-3 gap-1.5 opacity-15">
+            <template x-for="i in 9">
+              <div :class="[0,2,4,6,8].includes(i) ? 'bg-gray-900 dark:bg-gray-100' : 'bg-transparent'" class="w-6 h-6 rounded"></div>
+            </template>
+          </div>
+          <p class="text-xs text-gray-400 dark:text-gray-600">Kết quả hiển thị tại đây</p>
+        </div>
+
+        <!-- Loading state -->
+        <div x-show="loading"
+          class="aspect-square max-w-[280px] mx-auto rounded-2xl bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center">
+          <div class="text-center space-y-3">
+            <svg class="w-10 h-10 animate-spin text-indigo-500 mx-auto" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <p class="text-xs text-gray-400">Đang tạo...</p>
+          </div>
+        </div>
+
+        <!-- Image -->
+        <div x-show="preview && !loading" class="text-center">
+          <img :src="preview" class="max-w-[280px] w-full mx-auto rounded-xl shadow-sm" alt="Generated code" />
+        </div>
+      </div>
+
+      <!-- Download card -->
+      <div x-show="preview && !loading" x-transition class="card space-y-2">
+        <p class="section-label">Tải xuống</p>
+
+        <button @click="download('png')" class="btn-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Tải PNG
+        </button>
+
+        <button @click="download('jpg')"
+          class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Tải JPG
+        </button>
+
+        <button x-show="(tab==='qr' && qr.fmt==='svg') || (tab==='barcode' && bc.fmt==='svg')"
+          @click="download('svg')"
+          class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Tải SVG
+        </button>
+
+        <button @click="copyImage()"
+          class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Sao chép ảnh
+        </button>
+      </div>
+
+    </div>
+  </div><!-- end preview panel -->
+
+</main>
+
+<!-- ──────────────── TOAST ──────────────── -->
+<div x-show="toast" x-transition:enter="transition ease-out duration-200"
+  x-transition:enter-start="opacity-0 translate-y-3" x-transition:enter-end="opacity-100 translate-y-0"
+  x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+  class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-5 py-2.5 rounded-xl shadow-xl whitespace-nowrap"
+  x-text="toast">
+</div>
+
+<!-- ──────────────── SCRIPT ──────────────── -->
+<script>
+function app() {
+  return {
+    dark: localStorage.getItem('dark') === '1',
+    tab: 'qr',
+    qrType: 'website',
+    loading: false,
+    preview: null,
+    previewBlob: null,
+    codeId: null,
+    decodeFile: null,
+    decodePreview: null,
+    decodeResult: null,
+    dragging: false,
+    err: null,
+    toast: null,
+    _toastTimer: null,
+
+    qr: {
+      url: '', text: '',
+      firstName: '', lastName: '', org: '', jobTitle: '', email: '', phone: '', vcardWebsite: '', address: '', note: '',
+      ssid: '', pass: '', enc: 'WPA', hidden: false,
+      pdfUrl: '', iosUrl: '', androidUrl: '',
+      fmt: 'png', ec: 'M', size: 300,
+      fg: '#000000', bg: '#ffffff', logo: '', tracking: false,
+    },
+
+    bc: { type: 'code128', content: '', fmt: 'png', w: 200, h: 80, fg: '#000000', bg: '#ffffff', showText: true },
+
+    qrTypes: [
+      { id: 'website',  icon: '🌐', label: 'Website' },
+      { id: 'vcard',    icon: '👤', label: 'Business Card' },
+      { id: 'text',     icon: '📝', label: 'Text' },
+      { id: 'wifi',     icon: '📶', label: 'WiFi' },
+      { id: 'pdf',      icon: '📄', label: 'PDF' },
+      { id: 'appstore', icon: '📱', label: 'App Store' },
+    ],
+
+    barcodeTypes: [
+      { id: 'code128',    label: 'Code 128',    example: 'ABC-1234' },
+      { id: 'code39',     label: 'Code 39',     example: 'ABC123' },
+      { id: 'ean13',      label: 'EAN-13',      example: '5901234123457' },
+      { id: 'ean8',       label: 'EAN-8',       example: '96385074' },
+      { id: 'upca',       label: 'UPC-A',       example: '012345678905' },
+      { id: 'upce',       label: 'UPC-E',       example: '01234565' },
+      { id: 'itf14',      label: 'ITF-14',      example: '00012345678905' },
+      { id: 'codabar',    label: 'Codabar',     example: 'A12345B' },
+      { id: 'msi',        label: 'MSI',         example: '1234567' },
+      { id: 'pharmacode', label: 'Pharmacode',  example: '1234' },
+    ],
+
+    init() {
+      document.documentElement.classList.toggle('dark', this.dark);
+      this.$watch('dark', v => {
+        localStorage.setItem('dark', v ? '1' : '0');
+        document.documentElement.classList.toggle('dark', v);
+      });
+    },
+
+    toggleDark() { this.dark = !this.dark; },
+
+    switchTab(t) { this.tab = t; this.clearResult(); },
+
+    clearResult() {
+      if (this.preview && this.preview.startsWith('blob:')) URL.revokeObjectURL(this.preview);
+      this.preview = null; this.previewBlob = null; this.codeId = null; this.err = null;
+    },
+
+    clearDecode() {
+      this.decodeFile = null; this.decodePreview = null; this.decodeResult = null; this.err = null;
+    },
+
+    designPayload() {
+      return {
+        format: this.qr.fmt, errorCorrection: this.qr.ec, size: this.qr.size,
+        fgColor: this.qr.fg, bgColor: this.qr.bg,
+        logoUrl: this.qr.logo || undefined, scanTracking: this.qr.tracking,
+      };
+    },
+
+    async generateQR() {
+      this.clearResult();
+      this.loading = true;
+      const d = this.designPayload();
+      const map = {
+        website:  ['/qrcode/website',  { url: this.qr.url }],
+        text:     ['/qrcode/text',     { text: this.qr.text }],
+        vcard:    ['/qrcode/vcard',    { firstName: this.qr.firstName, lastName: this.qr.lastName || undefined, organization: this.qr.org || undefined, title: this.qr.jobTitle || undefined, email: this.qr.email || undefined, phone: this.qr.phone || undefined, website: this.qr.vcardWebsite || undefined, address: this.qr.address || undefined, note: this.qr.note || undefined }],
+        wifi:     ['/qrcode/wifi',     { ssid: this.qr.ssid, password: this.qr.pass || undefined, encryption: this.qr.enc, hidden: this.qr.hidden }],
+        pdf:      ['/qrcode/pdf',      { pdfUrl: this.qr.pdfUrl }],
+        appstore: ['/qrcode/appstore', { iosUrl: this.qr.iosUrl || undefined, androidUrl: this.qr.androidUrl || undefined }],
+      };
+      const [url, body] = map[this.qrType];
+      try {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, ...d }) });
+        if (!res.ok) { const e = await res.json(); throw new Error(Array.isArray(e.message) ? e.message.join(', ') : e.message); }
+        this.codeId = res.headers.get('X-QrCode-Id');
+        if (this.qr.fmt === 'base64') { const j = await res.json(); this.preview = j.data; }
+        else { const blob = await res.blob(); this.previewBlob = blob; this.preview = URL.createObjectURL(blob); }
+        // scroll to preview on mobile
+        if (window.innerWidth < 1024) this.$nextTick(() => document.querySelector('#preview-anchor')?.scrollIntoView({ behavior: 'smooth' }));
+      } catch (e) { this.err = e.message; }
+      finally { this.loading = false; }
+    },
+
+    async generateBarcode() {
+      this.clearResult();
+      this.loading = true;
+      try {
+        const res = await fetch('/barcode/generate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: this.bc.type, content: this.bc.content, format: this.bc.fmt, width: this.bc.w, height: this.bc.h, fgColor: this.bc.fg, bgColor: this.bc.bg, showText: this.bc.showText }),
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(Array.isArray(e.message) ? e.message.join(', ') : e.message); }
+        this.codeId = res.headers.get('X-Barcode-Id');
+        const blob = await res.blob(); this.previewBlob = blob; this.preview = URL.createObjectURL(blob);
+        if (window.innerWidth < 1024) this.$nextTick(() => document.querySelector('#preview-anchor')?.scrollIntoView({ behavior: 'smooth' }));
+      } catch (e) { this.err = e.message; }
+      finally { this.loading = false; }
+    },
+
+    handleDrop(e) { this.dragging = false; const f = e.dataTransfer.files[0]; if (f) this.setFile(f); },
+    handleFile(e) { const f = e.target.files[0]; if (f) this.setFile(f); },
+    setFile(f) {
+      this.decodeFile = f; this.decodeResult = null; this.err = null;
+      const r = new FileReader(); r.onload = ev => this.decodePreview = ev.target.result; r.readAsDataURL(f);
+    },
+
+    async decodeImage() {
+      if (!this.decodeFile) return;
+      this.loading = true; this.decodeResult = null; this.err = null;
+      const fd = new FormData(); fd.append('file', this.decodeFile);
+      try {
+        const res = await fetch('/decode', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(Array.isArray(data.message) ? data.message.join(', ') : data.message);
+        this.decodeResult = data;
+      } catch (e) { this.err = e.message; }
+      finally { this.loading = false; }
+    },
+
+    download(ext) {
+      if (!this.preview) return;
+      const name = `${this.tab === 'barcode' ? 'barcode' : 'qrcode'}-${this.codeId?.slice(0,8) ?? Date.now()}`;
+      if (ext === 'svg' && this.previewBlob) {
+        const a = document.createElement('a'); a.href = this.preview; a.download = `${name}.svg`; a.click(); return;
+      }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || 400; c.height = img.naturalHeight || 400;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0);
+        c.toBlob(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${name}.${ext}`; a.click(); },
+          ext === 'jpg' ? 'image/jpeg' : 'image/png', 0.95);
+      };
+      img.src = this.preview;
+    },
+
+    async copyImage() {
+      if (!this.previewBlob) return;
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ [this.previewBlob.type]: this.previewBlob })]);
+        this.showToast('Đã sao chép ảnh!');
+      } catch { this.showToast('Trình duyệt không hỗ trợ sao chép ảnh'); }
+    },
+
+    copyText(t) { navigator.clipboard.writeText(t ?? '').then(() => this.showToast('Đã sao chép!')); },
+
+    isUrl(t) { try { return t && (t.startsWith('http://') || t.startsWith('https://')); } catch { return false; } },
+
+    showToast(msg) { this.toast = msg; clearTimeout(this._toastTimer); this._toastTimer = setTimeout(() => this.toast = null, 2500); },
+  }
+}
+</script>
+
+<!-- Anchor for mobile scroll-to-preview -->
+<div id="preview-anchor" class="lg:hidden"></div>
+
+</body>
+</html>
