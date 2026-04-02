@@ -87,7 +87,7 @@
 
 <!-- ──────────────── HEADER ──────────────── -->
 <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-2 sm:gap-4">
 
     <!-- Logo -->
     <div class="flex items-center gap-2 flex-shrink-0">
@@ -101,7 +101,7 @@
       <template x-for="t in [{id:'qr',label:'QR Code'},{id:'barcode',label:'Barcode'},{id:'decode',label:'Decode'}]" :key="t.id">
         <button @click="switchTab(t.id)"
           :class="tab===t.id ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
-          class="px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap"
+          class="px-2 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap"
           x-text="t.label">
         </button>
       </template>
